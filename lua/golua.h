@@ -10,7 +10,7 @@ void clua_hide_pcall(lua_State *L);
 
 unsigned int clua_togofunction(lua_State* L, int index);
 unsigned int clua_togostruct(lua_State *L, int index);
-void clua_pushcallback(lua_State* L, unsigned int nup);
+void clua_pushcallback(lua_State* L);
 void clua_pushgofunction(lua_State* L, unsigned int fid);
 void clua_pushgostruct(lua_State *L, unsigned int fid);
 void clua_setgostate(lua_State* L, size_t gostateindex);
@@ -29,7 +29,10 @@ void clua_openpackage(lua_State* L);
 void clua_openstring(lua_State* L);
 void clua_opentable(lua_State* L);
 void clua_openos(lua_State* L);
-void clua_sethook(lua_State* L, int n);
+void clua_opencoroutine(lua_State *L);
+void clua_opendebug(lua_State *L);
+void clua_openbit32(lua_State *L);
+void clua_setexecutionlimit(lua_State* L, int n);
 
 int clua_isgofunction(lua_State *L, int n);
 int clua_isgostruct(lua_State *L, int n);

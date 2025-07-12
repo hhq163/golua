@@ -1,7 +1,15 @@
 package main
 
-import "github.com/aarzilli/golua/lua"
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/aarzilli/golua/lua"
+)
 
 func test(L *lua.State) int {
 	fmt.Println("hello world! from go!")
@@ -44,4 +52,13 @@ func main() {
 	err := L.DoString("test2(42)")
 
 	fmt.Printf("Ciao %v\n", err)
+
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP, syscall.SIGPIPE)
+	for {
+		sig := <-signalCh
+		log.Printf("gateway got sig %v", sig)
+
+		time.Sleep(20 * time.Second)
+	}
 }

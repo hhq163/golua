@@ -1,4 +1,0 @@
-// lua_upvalueindex
-func (L *State) UpvalueIndex(n int) int {
-	return int(C.clua_upvalueindex(C.int32_t(n)))
-}

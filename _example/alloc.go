@@ -1,16 +1,14 @@
 package main
 
-import (
-	"github.com/aarzilli/golua/lua"
-	"unsafe"
-	"fmt"
-)
+import "github.com/aarzilli/golua/lua"
+import "unsafe"
+import "fmt"
 
 var refHolder = map[unsafe.Pointer][]byte{}
 
-// a terrible allocator!
-// meant to be illustrative of the mechanics,
-// not usable as an actual implementation
+//a terrible allocator!
+//meant to be illustrative of the mechanics,
+//not usable as an actual implementation
 func AllocatorF(ptr unsafe.Pointer, osize uint, nsize uint) unsafe.Pointer {
 	if nsize == 0 {
 		if _, ok := refHolder[ptr]; ok {
@@ -29,7 +27,7 @@ func AllocatorF(ptr unsafe.Pointer, osize uint, nsize uint) unsafe.Pointer {
 		ptr = unsafe.Pointer(&(slice[0]))
 		refHolder[ptr] = slice
 	}
-	// fmt.Println("in allocf");
+	//fmt.Println("in allocf");
 	return ptr
 }
 
@@ -38,7 +36,8 @@ func A2(ptr unsafe.Pointer, osize uint, nsize uint) unsafe.Pointer {
 }
 
 func main() {
-	// refHolder = make([][]byte,0,500);
+
+	//refHolder = make([][]byte,0,500);
 
 	L := lua.NewStateAlloc(AllocatorF)
 	defer L.Close()
