@@ -1,33 +1,25 @@
 Go Bindings for the lua C API
 =========================
 
-![Build Status](https://github.com/aarzilli/golua/actions/workflows/build.yml/badge.svg)
+[![Build Status](https://travis-ci.org/aarzilli/golua.svg?branch=lua5.3)](https://travis-ci.org/aarzilli/golua)
 
 Simplest way to install:
 
-	# go get github.com/aarzilli/golua/lua
+	# go get -u github.com/hhq163/golua/lua
+
+Will work as long as your compiler can find a shared object called lua5.1 on linux, or lua anywhere else.
+If your linux system uses "lua" as the shared object name for lua (for example, Fedora Core does this) you can install using:
+
+	# go get -u -tags llua github.com/hhq163/golua/lua
+
 
 You can then try to run the examples:
 
-	$ cd golua/_example/
+	$ cd /usr/local/go/src/pkg/github.com/hhq163/golua/_example/
 	$ go run basic.go
 	$ go run alloc.go
 	$ go run panic.go
 	$ go run userdata.go
-
-This library is configured using build tags. By default it will look for a library (or "shared object") called:
-
-* lua5.1 on Linux and macOS
-* lua on Windows
-* lua-5.1 on FreeBSD
-
-If this doesn't work `-tags luadash5.1` can be used to force `lua-5.1`, and `-tags llua` can be used to force `lua`.
-
-If you want to statically link to liblua.a you can do that with `-tags luaa`. Luajit can also be used by
-specifying `-tags luajit`.
-
-The library uses lua5.1 by default but also supports lua5.2 by specifying `-tags lua52`, lua5.3 by
-specifying `-tags lua53`, and lua5.4 by specifying `-tags lua54`. If the library installed on your system has a dash, for example it is called `liblua-5.4` use the `lluadash` tag: `go build -tags lua54,lluadash ...`.
 
 QUICK START
 ---------------------
@@ -86,11 +78,8 @@ ON ERROR HANDLING
 Lua's exceptions are incompatible with Go, golua works around this incompatibility by setting up protected execution environments in `lua.State.DoString`, `lua.State.DoFile`  and lua.State.Call and turning every exception into a Go panic.
 
 This means that:
-
 1. In general you can't do any exception handling from Lua, `pcall` and `xpcall` are renamed to `unsafe_pcall` and `unsafe_xpcall`. They are only safe to be called from Lua code that never calls back to Go. Use at your own risk.
-
 2. The call to lua.State.Error, present in previous versions of this library, has been removed as it is nonsensical
-
 3. Method calls on a newly created `lua.State` happen in an unprotected environment, if Lua throws an exception as a result your program will be terminated. If this is undesirable perform your initialization like this:
 
 ```go
@@ -113,19 +102,7 @@ ON THREADS AND COROUTINES
 ODDS AND ENDS
 ---------------------
 
-* If you want to build against lua5.2, lua5.3, or lua5.4 use the build tags lua52, lua53, or lua54 respectively.
 * Compiling from source yields only a static link library (liblua.a), you can either produce the dynamic link library on your own or use the `luaa` build tag.
-
-LUAJIT
----------------------
-
-To link with [luajit-2.0.x](http://luajit.org/luajit.html), you can use CGO_CFLAGS and CGO_LDFLAGS environment variables
-
-```
-$ CGO_CFLAGS=`pkg-config luajit --cflags`
-$ CGO_LDFLAGS=`pkg-config luajit --libs-only-L`
-$ go get -f -u -tags luajit github.com/aarzilli/golua/lua
-```
 
 CONTRIBUTORS
 ---------------------
@@ -143,9 +120,6 @@ CONTRIBUTORS
 * HongZhen Peng
 * Admin36
 * Pierre Neidhardt (@Ambrevar)
-* HuangWei (@huangwei1024)
-* Adam Saponara
-* [Tim van Osch](https://github.com/TimVosch)
 
 SEE ALSO
 ---------------------

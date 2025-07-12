@@ -2,6 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/hhq163/golua/lua"
 )
@@ -47,4 +52,13 @@ func main() {
 	err := L.DoString("test2(42)")
 
 	fmt.Printf("Ciao %v\n", err)
+
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP, syscall.SIGPIPE)
+	for {
+		sig := <-signalCh
+		log.Printf("gateway got sig %v", sig)
+
+		time.Sleep(20 * time.Second)
+	}
 }

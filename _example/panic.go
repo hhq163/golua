@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/aarzilli/golua/lua"
 	"fmt"
+
+	"github.com/hhq163/golua/lua"
 )
 
 func test(L *lua.State) int {
@@ -11,6 +12,7 @@ func test(L *lua.State) int {
 }
 
 func main() {
+
 	var L *lua.State
 
 	L = lua.NewState()
@@ -30,7 +32,7 @@ func main() {
 
 	L.AtPanic(newPanic)
 
-	// force a panic
+	//force a panic
 	L.PushNil()
 	L.Call(0, 0)
 

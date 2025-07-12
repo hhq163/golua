@@ -13,6 +13,11 @@
 static const char GoStateRegistryKey = 'k'; //golua registry key
 static const char PanicFIDRegistryKey = 'k';
 
+typedef struct _chunk {
+	int size; // chunk size
+	char *buffer; // chunk data
+	char* toread; // chunk to read
+} chunk;
 
 /* taken from lua5.2 source */
 void *testudata(lua_State *L, int ud, const char *tname)
@@ -117,9 +122,9 @@ static int callback_c (lua_State* L)
 	return golua_callgofunction(gostateindex,fid);
 }
 
-void clua_pushcallback(lua_State* L, unsigned int nup)
+void clua_pushcallback(lua_State* L)
 {
-	lua_pushcclosure(L,callback_c, 1 + nup);
+	lua_pushcclosure(L,callback_c,1);
 }
 
 void clua_pushgostruct(lua_State* L, unsigned int iid)
@@ -144,6 +149,56 @@ void clua_setgostate(lua_State* L, size_t gostateindex)
 	lua_pushlightuserdata(L, (void*)gostateindex);
 	//set into registry table
 	lua_settable(L, LUA_REGISTRYINDEX);
+}
+
+static int writer (lua_State *L, const void* b, size_t size, void* B) {
+	static int count=0;
+	(void)L;
+	luaL_addlstring((luaL_Buffer*) B, (const char *)b, size);
+	return 0;
+}
+
+// dump function chunk from luaL_loadstring
+int dump_chunk (lua_State *L) {
+	luaL_Buffer b;
+	luaL_checktype(L, -1, LUA_TFUNCTION);
+	lua_settop(L, -1);
+	luaL_buffinit(L,&b);
+	int lerrno;
+	lerrno = lua_dump(L, writer, &b, 0);
+	if (lerrno != 0){
+	return luaL_error(L, "unable to dump given function, lerrno:%d", lerrno);
+	}
+	luaL_pushresult(&b);
+	return 0;
+}
+
+static const char * reader (lua_State *L, void *ud, size_t *sz) {
+	chunk *ck = (chunk *)ud;
+	if (ck->size > LUAL_BUFFERSIZE) {
+		ck->size -= LUAL_BUFFERSIZE;
+		*sz = LUAL_BUFFERSIZE;
+		ck->toread = ck->buffer;
+		ck->buffer += LUAL_BUFFERSIZE;
+	}else{
+		*sz = ck->size;
+		ck->toread = ck->buffer;
+		ck->size = 0;
+	}
+	return ck->toread;
+}
+
+// load function chunk dumped from dump_chunk
+int load_chunk(lua_State *L, char *b, int size, const char* chunk_name) {
+	chunk ck;
+	ck.buffer = b;
+	ck.size = size;
+	int lerrno;
+	lerrno = lua_load(L, reader, &ck, chunk_name, NULL);
+	if (lerrno != 0) {
+		return luaL_error(L, "unable to load chunk, lerrno: %d", lerrno);
+	}
+	return 0;
 }
 
 /* called when lua code attempts to access a field of a published go object */
@@ -272,7 +327,7 @@ int callback_panicf(lua_State* L)
 {
 	lua_pushlightuserdata(L,(void*)&PanicFIDRegistryKey);
 	lua_gettable(L,LUA_REGISTRYINDEX);
-	unsigned int fid = lua_tointeger(L,-1);
+	unsigned int fid = lua_tointegerx(L,-1,NULL);
 	lua_pop(L,1);
 	size_t gostateindex = clua_getgostate(L);
 	return golua_callpanicfunction(gostateindex,fid);
@@ -287,7 +342,7 @@ GoInterface clua_atpanic(lua_State* L, unsigned int panicf_id)
 	lua_pushlightuserdata(L, (void*)&PanicFIDRegistryKey);
 	lua_gettable(L,LUA_REGISTRYINDEX);
 	if(lua_isnil(L, -1) == 0)
-		old_id = lua_tointeger(L,-1);
+		old_id = lua_tointegerx(L,-1,NULL);
 	lua_pop(L, 1);
 
 	//set registry key for function id of go panic function
@@ -339,14 +394,68 @@ void clua_openbase(lua_State* L)
 	clua_hide_pcall(L);
 }
 
+void clua_openio(lua_State* L)
+{
+	luaL_requiref(L, "io", &luaopen_io, 1);
+	lua_pop(L, 1);
+}
+
+void clua_openmath(lua_State* L)
+{
+	luaL_requiref(L, "math", &luaopen_math, 1);
+	lua_pop(L, 1);
+}
+
+void clua_openpackage(lua_State* L)
+{
+	luaL_requiref(L, "package", &luaopen_package, 1);
+	lua_pop(L, 1);
+}
+
+void clua_openstring(lua_State* L)
+{
+	luaL_requiref(L, "string", &luaopen_string, 1);
+	lua_pop(L, 1);
+}
+
+void clua_opentable(lua_State* L)
+{
+	luaL_requiref(L, "table", &luaopen_table, 1);
+	lua_pop(L, 1);
+}
+
+void clua_openos(lua_State* L)
+{
+	luaL_requiref(L, "os", &luaopen_os, 1);
+	lua_pop(L, 1);
+}
+
+void clua_opencoroutine(lua_State *L)
+{
+	luaL_requiref(L, "coroutine", &luaopen_coroutine, 1);
+	lua_pop(L, 1);
+}
+
+void clua_opendebug(lua_State *L)
+{
+	luaL_requiref(L, "debug", &luaopen_debug, 1);
+	lua_pop(L, 1);
+}
+
+void clua_openbit32(lua_State *L)
+{
+	luaL_requiref(L, "bit32", &luaopen_bit32, 1);
+	lua_pop(L, 1);
+}
+
 void clua_hook_function(lua_State *L, lua_Debug *ar)
 {
 	lua_checkstack(L, 2);
-	size_t gostateindex = clua_getgostate(L);
-	golua_callgohook(gostateindex);
+	lua_pushstring(L, "Lua execution quantum exceeded");
+	lua_error(L);
 }
 
-void clua_sethook(lua_State* L, int n)
+void clua_setexecutionlimit(lua_State* L, int n)
 {
 	lua_sethook(L, &clua_hook_function, LUA_MASKCOUNT, n);
 }
