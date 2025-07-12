@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/hhq163/golua/lua"
 )
@@ -57,8 +56,8 @@ func main() {
 	signal.Notify(signalCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP, syscall.SIGPIPE)
 	for {
 		sig := <-signalCh
-		log.Printf("gateway got sig %v", sig)
+		log.Printf("demo got sig %v", sig)
 
-		time.Sleep(20 * time.Second)
+		os.Exit(0)
 	}
 }
