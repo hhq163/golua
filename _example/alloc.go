@@ -1,14 +1,17 @@
 package main
 
-import "github.com/aarzilli/golua/lua"
-import "unsafe"
-import "fmt"
+import (
+	"fmt"
+	"unsafe"
+
+	"github.com/hhq163/golua/lua"
+)
 
 var refHolder = map[unsafe.Pointer][]byte{}
 
-//a terrible allocator!
-//meant to be illustrative of the mechanics,
-//not usable as an actual implementation
+// a terrible allocator!
+// meant to be illustrative of the mechanics,
+// not usable as an actual implementation
 func AllocatorF(ptr unsafe.Pointer, osize uint, nsize uint) unsafe.Pointer {
 	if nsize == 0 {
 		if _, ok := refHolder[ptr]; ok {

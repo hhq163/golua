@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aarzilli/golua/lua"
+	"github.com/hhq163/golua/lua"
 )
 
 func test(L *lua.State) int {

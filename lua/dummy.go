@@ -1,3 +1,4 @@
+//go:build dummy
 // +build dummy
 
 // This file is part of a workaround for `go mod vendor` which won't
@@ -14,5 +15,5 @@
 package lua
 
 import (
-	_ "github.com/aarzilli/golua/lua/lua"
+	_ "github.com/hhq163/golua/lua/lua"
 )
